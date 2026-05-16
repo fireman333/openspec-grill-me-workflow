@@ -20,6 +20,69 @@
 
 ---
 
+## OpenSpec quick context（什麼是 OpenSpec / `/opsx:*` / `/spec`）
+
+如果你還沒接觸過 OpenSpec，下面三層名詞會混。先快速 disambiguate：
+
+### Layer 1：`openspec` CLI（primitive，由 [Fission AI](https://github.com/Fission-AI/OpenSpec) 維護）
+
+- 安裝：`npm install -g @fission-ai/openspec@latest`（需 Node ≥ 20.19）
+- 在 shell 跑，例：`openspec init`、`openspec list`、`openspec validate`、`openspec archive <name>`、`openspec status --change <name>`
+- **Deterministic、無 LLM**，做 CRUD on `openspec/` 目錄 + 結構驗證
+- 單獨可用，不需要 Claude Code
+
+### Layer 2：`/opsx:*` slash commands（LLM workflow，**自動生成**）
+
+- 來源：跑 `openspec init --tools claude` 時 CLI 把 `.md` 命令檔產到 `<project>/.claude/commands/opsx/`，**不是手寫的**
+- 在 Claude Code 用 slash command 觸發，典型命令：
+  - `/opsx:propose <name>` — LLM 草擬 `proposal.md`（problem / approach / acceptance）
+  - `/opsx:tasks` — 拆 `tasks.md`
+  - `/opsx:apply` — LLM 寫 spec delta + shell out 跑 `openspec apply`
+  - `/opsx:archive <name>` — 確認 4/4 artifacts 齊 + 跑 `openspec archive` + sync
+  - `/opsx:verify` — 跑 `openspec validate` + LLM 解讀
+- **Per-project**（每個 project init 一次）；LLM 推理 + 內部 shell out 到 Layer 1
+
+### Layer 3：`/spec`（本 repo 的 lifecycle gate wrapper，[`skills/spec/`](skills/spec/)）
+
+- 補的是 **lifecycle 邊界 + 跨 session context**，**不重複** Layer 2 已有的 propose / apply / archive
+- 模式：
+  - `assess` — 該不該裝 OpenSpec（gate keeper）
+  - `clarify` — pre-init grill（包裝 [`/grill-me`](skills/grill-me/) Deep mode）
+  - `retro` — legacy repo 從 git history 回填 specs/
+  - `resume` — 新 session 開場 context warm-up
+  - `handoff` — session 結束 validate + archive reminder
+  - `note` / `clear` — 即時決策捕捉 + session 切換
+
+### 一個完整 cycle 對應到哪一層
+
+```
+你想做新 feature
+    ↓
+/spec resume                  ← Layer 3（接 session context）
+    ↓
+/grill quick                  ← /grill-me（釐清要做什麼）
+    ↓
+/opsx:propose user-auth       ← Layer 2（LLM 寫 proposal）
+    ↓
+/opsx:tasks                   ← Layer 2
+    ↓
+... 實作 ...
+    ↓
+/opsx:apply                   ← Layer 2 內部 shell out
+        ↓
+        openspec apply        ← Layer 1
+    ↓
+/opsx:archive user-auth       ← Layer 2 內部 shell out
+        ↓
+        openspec archive      ← Layer 1
+    ↓
+/spec handoff                 ← Layer 3（validate + commit）
+```
+
+**關鍵**：本 repo 的工作流筆記主要描述 **Layer 3 怎麼包 Layer 2**。Layer 1 + Layer 2 是 OpenSpec 提供的，**不在本 repo 範圍** — 看官方 [OpenSpec docs](https://openspec.dev/) 跟 [GitHub repo](https://github.com/Fission-AI/OpenSpec)。
+
+---
+
 ## 1. OpenSpec 原生開發循環
 
 OpenSpec 把每個 feature / 重構 / 變更包成一個 **change proposal**，走四段：
