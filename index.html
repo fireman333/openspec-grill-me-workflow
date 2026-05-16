@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>OpenSpec 開發流程 × grill-me 融入指南</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --fg: #1a1a1a;
+    --muted: #6b6b6b;
+    --accent: #c2410c;
+    --accent-soft: #fef3c7;
+    --grill: #7c3aed;
+    --grill-soft: #ede9fe;
+    --card: #ffffff;
+    --border: #e5e5e0;
+    --code-bg: #f4f4ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Helvetica Neue", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+    line-height: 1.7;
+  }
+  h1 {
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 0.5rem;
+  }
+  h2 {
+    font-size: 1.3rem;
+    margin: 2.5rem 0 0.8rem;
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 1.05rem;
+    margin: 1.5rem 0 0.5rem;
+  }
+  .tagline {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+  }
+  .grill-card {
+    background: var(--grill-soft);
+    border-left: 4px solid var(--grill);
+  }
+  .gate-card {
+    background: var(--accent-soft);
+    border-left: 4px solid var(--accent);
+  }
+  code, .mono {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+    background: var(--code-bg);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 0.9rem 1.1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+  pre code { background: none; padding: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.92rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    background: #f0efe9;
+    font-weight: 600;
+  }
+  td.gate { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  td.grill { color: var(--grill); font-weight: 600; white-space: nowrap; }
+  .mermaid {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    text-align: center;
+  }
+  .legend {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    margin: 0.5rem 0 1rem;
+    color: var(--muted);
+  }
+  .legend span::before {
+    content: "■";
+    margin-right: 0.3rem;
+  }
+  .legend .spec::before { color: var(--accent); }
+  .legend .grill::before { color: var(--grill); }
+  .legend .native::before { color: #0e7490; }
+  blockquote {
+    margin: 1rem 0;
+    padding: 0.8rem 1.2rem;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    color: #7c2d12;
+    font-size: 0.92rem;
+    border-radius: 0 4px 4px 0;
+  }
+  .small { font-size: 0.85rem; color: var(--muted); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+  .tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 3px;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+  }
+  .tag-quick { background: #dcfce7; color: #166534; }
+  .tag-deep { background: #ede9fe; color: #5b21b6; }
+  .tag-skip { background: #f4f4ee; color: #6b6b6b; }
+</style>
+</head>
+<body>
+
+<h1>OpenSpec 開發流程 × <span style="color:var(--grill)">grill-me</span> 融入指南</h1>
+<div class="tagline">把 spec-driven development 的 5 個 gate，跟 grill-me 的釐清節點對齊起來</div>
+
+<div class="legend">
+  <span class="native">OpenSpec 原生 CLI / opsx 命令</span>
+  <span class="spec">/spec wrapper gate</span>
+  <span class="grill">grill-me 注入點</span>
+</div>
+
+<h2>① OpenSpec 原生開發循環</h2>
+<p>OpenSpec 把每一個 feature / 重構 / 變更包成一個 <strong>change proposal</strong>，走 propose → tasks → implement → archive 四段。底層由 <code>openspec</code> CLI + <code>/opsx:*</code> plugin 命令提供。</p>
+
+<div class="mermaid">
+flowchart LR
+  A[🧠 想做某件事] --> B[opsx:propose<br/>寫 proposal]
+  B --> C[opsx:tasks<br/>拆 tasks.md]
+  C --> D[實作 + 跑 tests]
+  D --> E[opsx:apply<br/>把 spec diff 寫進 specs/]
+  E --> F[opsx:archive<br/>歸檔 change]
+  F --> G[(specs/ 真相來源<br/>+ archive/ 歷史)]
+
+  style B fill:#e0f2fe,stroke:#0e7490
+  style C fill:#e0f2fe,stroke:#0e7490
+  style E fill:#e0f2fe,stroke:#0e7490
+  style F fill:#e0f2fe,stroke:#0e7490
+</div>
+
+<blockquote>痛點：openspec 預設假設你已經知道「要 propose 什麼」。在 vibe-coding / 自由開發場景，最常卡住的是 <strong>propose 之前的概念釐清</strong> 跟 <strong>跨 session 的 context 丟失</strong>。</blockquote>
+
+<h2>② <code>/spec</code> 5 個 gate 套在外面</h2>
+<p><code>/spec</code> skill 是 cross-session wrapper，補的是 <strong>lifecycle 邊界</strong>（init / resume / handoff）跟 <strong>歷史回填</strong>（retro）；不重複實作 propose / apply / archive。</p>
+
+<div class="mermaid">
+flowchart TD
+  S0["/spec assess<br/>偵測 cwd 適不適合 OpenSpec"] --> S1["/spec init<br/>裝 openspec 結構"]
+  S1 --> LOOP{進入開發循環}
+  LOOP --> P[opsx:propose → tasks → apply]
+  P --> LOOP
+  S1 -.既有 repo.-> RETRO["/spec retro<br/>從 git history 回填"]
+  RETRO --> LOOP
+  LOOP --> RS["/spec resume<br/>新 session 接上下文"]
+  RS --> LOOP
+  LOOP --> HO["/spec handoff<br/>PreCompact 前快照"]
+  HO --> RS
+
+  style S0 fill:#fef3c7,stroke:#c2410c
+  style S1 fill:#fef3c7,stroke:#c2410c
+  style RETRO fill:#fef3c7,stroke:#c2410c
+  style RS fill:#fef3c7,stroke:#c2410c
+  style HO fill:#fef3c7,stroke:#c2410c
+  style P fill:#e0f2fe,stroke:#0e7490
+</div>
+
+<h2>③ grill-me 兩個切入時機</h2>
+
+<div class="card grill-card">
+<h3>切入點 A：<code>/spec init</code> <strong>之前</strong> — 用 <code>/spec clarify</code></h3>
+<p><code>/spec clarify</code> 就是 grill-me 的 thin wrapper：<strong>強制 Deep 模式 + software-project facet pack</strong>，輸出寫到 <code>openspec/project-clarifications.md</code>，<code>/spec init</code> 啟動時會讀進來當 project context。</p>
+<p class="small">15+ 題 recursive，~15–30 min。覆蓋 problem statement、users、scope boundary、non-goals、success criteria、constraints、prior art (no-wheels)、risks。</p>
+</div>
+
+<div class="card grill-card">
+<h3>切入點 B：<code>opsx:propose</code> <strong>之前</strong> — 用 <code>/grill quick</code></h3>
+<p>每要開一個 change proposal 之前先 grill 一輪，把模糊概念逼出可寫 spec 的形狀。</p>
+<p class="small">5–7 題 ~5 min。聚焦在這個 change 的 scope / acceptance criteria / 跟既有 spec 的衝突。</p>
+<p><strong>Hard rule（CLAUDE.md plan-phase）</strong>：偵測到「我想做一個 X」「規劃／設計／重構 Y」這類 planning signal，<strong>先 propose <code>/grill quick</code> 並等回應</strong>，不要直接進 plan mode、不要直接開寫 proposal、不要 spawn agent。使用者說「不用 grill、直接做」才略過。</p>
+</div>
+
+<h2>④ 合體後的完整工作流</h2>
+
+<div class="mermaid">
+flowchart TD
+  Start([新 vibe-coding 專案 / 想接手 legacy repo]) --> Q1{已經有<br/>openspec dir?}
+
+  Q1 -- 沒有 --> ASSESS["/spec assess"]
+  ASSESS --> CLARIFY["/spec clarify<br/>= grill-me Deep<br/>15+ 題"]
+  CLARIFY --> INIT["/spec init<br/>讀 clarifications"]
+  INIT --> READY
+
+  Q1 -- 有 + 是 legacy --> RETRO["/spec retro<br/>git history → specs"]
+  RETRO --> READY
+
+  Q1 -- 有 + 新 session --> RESUME["/spec resume"]
+  RESUME --> READY
+
+  READY{準備開新 change} --> GRILL["/grill quick<br/>5–7 題釐清"]
+  GRILL --> PROPOSE["opsx:propose<br/>寫 proposal"]
+  PROPOSE --> TASKS["opsx:tasks"]
+  TASKS --> CODE["實作 + 測試"]
+  CODE --> DRIFT{中途發現<br/>scope 模糊?}
+  DRIFT -- 是 --> GRILL2["/grill quick<br/>refocus"]
+  GRILL2 --> CODE
+  DRIFT -- 否 --> APPLY["opsx:apply<br/>更新 specs"]
+  APPLY --> ARCHIVE["opsx:archive"]
+  ARCHIVE --> EOS{session 要結束?}
+  EOS -- 是 --> HANDOFF["/spec handoff"]
+  EOS -- 否 --> READY
+
+  style ASSESS fill:#fef3c7,stroke:#c2410c
+  style INIT fill:#fef3c7,stroke:#c2410c
+  style RETRO fill:#fef3c7,stroke:#c2410c
+  style RESUME fill:#fef3c7,stroke:#c2410c
+  style HANDOFF fill:#fef3c7,stroke:#c2410c
+  style CLARIFY fill:#ede9fe,stroke:#7c3aed
+  style GRILL fill:#ede9fe,stroke:#7c3aed
+  style GRILL2 fill:#ede9fe,stroke:#7c3aed
+  style PROPOSE fill:#e0f2fe,stroke:#0e7490
+  style TASKS fill:#e0f2fe,stroke:#0e7490
+  style APPLY fill:#e0f2fe,stroke:#0e7490
+  style ARCHIVE fill:#e0f2fe,stroke:#0e7490
+</div>
+
+<h2>⑤ Gate × Grill 對照表</h2>
+
+<table>
+<thead>
+<tr><th>時機</th><th>命令</th><th>grill 形態</th><th>產出</th><th>跳過條件</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>新專案 / 第一次裝 openspec</td>
+  <td class="gate">/spec init 前</td>
+  <td class="grill"><span class="tag tag-deep">Deep</span></td>
+  <td><code>openspec/project-clarifications.md</code></td>
+  <td>純 fork、概念已成熟有寫好的 PRD</td>
+</tr>
+<tr>
+  <td>每次開新 change</td>
+  <td class="gate">opsx:propose 前</td>
+  <td class="grill"><span class="tag tag-quick">Quick</span></td>
+  <td>scope / acceptance criteria 草稿（口頭 → propose 內文）</td>
+  <td>One-line bugfix、純 rename / dep bump</td>
+</tr>
+<tr>
+  <td>實作中 scope drift</td>
+  <td class="gate">code 階段</td>
+  <td class="grill"><span class="tag tag-quick">Quick</span></td>
+  <td>refocused tasks.md / 砍 / 拆 change</td>
+  <td>明確只是技術細節 trade-off，跟 spec 無關</td>
+</tr>
+<tr>
+  <td>跨 session 接手</td>
+  <td class="gate">/spec resume</td>
+  <td class="grill"><span class="tag tag-skip">通常不用</span></td>
+  <td>—</td>
+  <td>resume 自己會讀 clarifications + active changes</td>
+</tr>
+<tr>
+  <td>Session 結束</td>
+  <td class="gate">/spec handoff</td>
+  <td class="grill"><span class="tag tag-skip">不用</span></td>
+  <td>—</td>
+  <td>handoff 是快照不是釐清</td>
+</tr>
+<tr>
+  <td>Legacy repo retro</td>
+  <td class="gate">/spec retro</td>
+  <td class="grill"><span class="tag tag-skip">可選 Quick</span></td>
+  <td>retro 完發現 spec 缺什麼，再補 grill</td>
+  <td>git history 已經夠清楚</td>
+</tr>
+</tbody>
+</table>
+
+<h2>⑥ 實際命令 sequence（複製即用）</h2>
+
+<h3>場景 A：從零開新專案</h3>
+<pre><code>cd ~/projects/my-new-app/
+/spec assess              # 確認適合 openspec
+/spec clarify             # ← Deep grill，~20 min，產出 clarifications.md
+/spec init                # 讀 clarifications，建 openspec/ 結構
+
+# 開第一個 change
+/grill quick              # ← 5 min 釐清這次要做什麼
+/opsx:propose user-auth   # 寫 proposal
+/opsx:tasks               # 拆 tasks.md
+# ... 實作 ...
+/opsx:apply               # 更新 specs/
+/opsx:archive             # 歸檔
+</code></pre>
+
+<h3>場景 B：legacy repo 接手</h3>
+<pre><code>cd ~/projects/legacy-app/
+/spec assess
+/spec init
+/spec retro               # 從 git history 回填現有 specs/
+# 之後同場景 A 的「開新 change」段
+</code></pre>
+
+<h3>場景 C：新 session 接續</h3>
+<pre><code>cd ~/projects/my-new-app/
+/spec resume              # 自動讀 clarifications + active changes + last handoff
+# 直接進「開新 change」段
+</code></pre>
+
+<hr>
+
+<h2>⑦ 為什麼要這樣切</h2>
+<ul>
+  <li><strong>grill-me Deep 跟 OpenSpec project context 是同一件事</strong>：兩邊都在問「這專案要幹嘛、給誰用、邊界在哪、success 怎麼定義」。直接讓 grill 輸出餵給 init，不重複問。</li>
+  <li><strong>grill-me Quick 跟 OpenSpec change proposal 是同一個顆粒度</strong>：一個 change = 一個 PR-sized 的範圍變動，5–7 題剛好。寫 proposal 之前 grill，比寫到一半發現 scope 不對再砍掉便宜。</li>
+  <li><strong>plan-phase hard rule 自然觸發</strong>：「想做 X」「規劃 Y」這種訊號出現 → propose <code>/grill quick</code> 等回應 → grill 完寫 propose，整條鏈就是 spec-driven 的正規流程。</li>
+  <li><strong>不要在 resume / handoff 加 grill</strong>：那兩個 gate 是 lifecycle 機制不是釐清節點，硬加會讓接手變慢。</li>
+</ul>
+
+<div class="small" style="margin-top:2rem; text-align:right;">
+  Generated 2026-05-16 · 對應 <code>/spec</code> + <code>/grill-me</code> 兩個 Claude Code skill
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      fontFamily: '-apple-system, "Helvetica Neue", "PingFang TC", sans-serif',
+      primaryColor: '#fafaf7',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#6b6b6b',
+      lineColor: '#6b6b6b',
+      fontSize: '14px'
+    },
+    flowchart: { curve: 'basis', padding: 15 }
+  });
+</script>
+
+</body>
+</html>

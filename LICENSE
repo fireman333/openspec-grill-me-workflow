@@ -1,0 +1,46 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Copyright (c) 2026 康瑋麟 (fireman333)
+
+This work — including text, diagrams, and code samples in this repository —
+is licensed under the Creative Commons Attribution 4.0 International License.
+
+Summary (this is not a substitute for the full license):
+
+  You are free to:
+    - Share — copy and redistribute the material in any medium or format
+    - Adapt — remix, transform, and build upon the material for any
+      purpose, even commercially.
+
+  Under the following terms:
+    - Attribution — You must give appropriate credit, provide a link to
+      the license, and indicate if changes were made. You may do so in
+      any reasonable manner, but not in any way that suggests the licensor
+      endorses you or your use.
+
+  No additional restrictions — You may not apply legal terms or
+  technological measures that legally restrict others from doing
+  anything the license permits.
+
+To view a copy of this license, visit:
+  https://creativecommons.org/licenses/by/4.0/
+
+Full legal code:
+  https://creativecommons.org/licenses/by/4.0/legalcode
+
+----
+
+Third-party content acknowledgment:
+
+  - "OpenSpec" is an independent open-source project; concepts are used
+    per public documentation. This work is not affiliated with the
+    OpenSpec authors.
+
+  - Mermaid diagrams rendered via the Mermaid library (MIT License,
+    https://github.com/mermaid-js/mermaid).
+
+  - Hero image (images/hero.png) generated with OpenAI Codex CLI /
+    gpt-image-2. Per OpenAI terms, generated images are owned by the user.
+
+These third-party works retain their own licenses; this CC-BY-4.0 license
+applies only to the original content in this repository.
