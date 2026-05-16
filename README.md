@@ -16,6 +16,8 @@
 
 互動版（含 syntax highlighting + 細節）：[`index.html`](index.html) — 部署版見 [GitHub Pages](https://fireman333.github.io/openspec-grill-me-workflow/)。
 
+**Skill source** (MIT 授權，獨立於本筆記)：兩個 skill 的實際 SKILL.md + dependencies 放在 [`skills/`](skills/) 目錄 — 包含 `/spec` 的完整 lifecycle 模式（assess / init / clarify / retro / resume / handoff / note / clear）與 `/grill-me` 的 5 個 facet pack。⚠️ 內含個人 setup 的 cross-skill 引用，**read [skills/README.md](skills/README.md) 的 disclaimer 再決定要 fork 還是 study-only**。
+
 ---
 
 ## 1. OpenSpec 原生開發循環

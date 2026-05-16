@@ -44,3 +44,7 @@ Third-party content acknowledgment:
 
 These third-party works retain their own licenses; this CC-BY-4.0 license
 applies only to the original content in this repository.
+
+Note: files inside the `skills/` subdirectory are released under MIT instead
+of CC-BY-4.0. See `skills/LICENSE.MIT` for details. CC-BY-4.0 applies to
+everything else (README, index.html, images, root-level docs).
