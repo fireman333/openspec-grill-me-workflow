@@ -154,6 +154,71 @@
   <span class="grill">grill-me 注入點</span>
 </div>
 
+<h2>⓪ OpenSpec quick context（什麼是 OpenSpec / <code>/opsx:*</code> / <code>/spec</code>）</h2>
+
+<p>如果你還沒接觸過 OpenSpec，下面三層名詞會混。先快速 disambiguate：</p>
+
+<div class="card">
+  <h3>Layer 1：<code>openspec</code> CLI（primitive，由 <a href="https://github.com/Fission-AI/OpenSpec">Fission AI</a> 維護）</h3>
+  <ul>
+    <li>安裝：<code>npm install -g @fission-ai/openspec@latest</code>（需 Node ≥ 20.19）</li>
+    <li>在 shell 跑，例：<code>openspec init</code>、<code>openspec list</code>、<code>openspec validate</code>、<code>openspec archive &lt;name&gt;</code>、<code>openspec status --change &lt;name&gt;</code></li>
+    <li><strong>Deterministic、無 LLM</strong>，做 CRUD on <code>openspec/</code> 目錄 + 結構驗證</li>
+    <li>單獨可用，不需要 Claude Code</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>Layer 2：<code>/opsx:*</code> slash commands（LLM workflow，<strong>自動生成</strong>）</h3>
+  <ul>
+    <li>來源：跑 <code>openspec init --tools claude</code> 時 CLI 把 <code>.md</code> 命令檔產到 <code>&lt;project&gt;/.claude/commands/opsx/</code>，<strong>不是手寫的</strong></li>
+    <li>在 Claude Code 用 slash command 觸發，典型命令：
+      <ul>
+        <li><code>/opsx:propose &lt;name&gt;</code> — LLM 草擬 <code>proposal.md</code>（problem / approach / acceptance）</li>
+        <li><code>/opsx:tasks</code> — 拆 <code>tasks.md</code></li>
+        <li><code>/opsx:apply</code> — LLM 寫 spec delta + shell out 跑 <code>openspec apply</code></li>
+        <li><code>/opsx:archive &lt;name&gt;</code> — 確認 4/4 artifacts 齊 + 跑 <code>openspec archive</code> + sync</li>
+        <li><code>/opsx:verify</code> — 跑 <code>openspec validate</code> + LLM 解讀</li>
+      </ul>
+    </li>
+    <li><strong>Per-project</strong>（每 init 一次），LLM 推理 + 內部 shell out 到 Layer 1</li>
+  </ul>
+</div>
+
+<div class="card gate-card">
+  <h3>Layer 3：<code>/spec</code>（本 repo 的 lifecycle gate wrapper）</h3>
+  <ul>
+    <li>補的是 <strong>lifecycle 邊界 + 跨 session context</strong>，<strong>不重複</strong> Layer 2 已有的 propose / apply / archive</li>
+    <li>模式：<code>assess</code>（gate keeper）/ <code>clarify</code>（包 <code>/grill-me</code> Deep）/ <code>retro</code>（從 git 回填）/ <code>resume</code>（context warm-up）/ <code>handoff</code>（validate + commit）/ <code>note</code> / <code>clear</code></li>
+  </ul>
+</div>
+
+<h3>一個完整 cycle 對應到哪一層</h3>
+
+<pre><code>你想做新 feature
+    ↓
+/spec resume                  ← Layer 3（接 session context）
+    ↓
+/grill quick                  ← /grill-me（釐清要做什麼）
+    ↓
+/opsx:propose user-auth       ← Layer 2（LLM 寫 proposal）
+    ↓
+/opsx:tasks                   ← Layer 2
+    ↓
+... 實作 ...
+    ↓
+/opsx:apply                   ← Layer 2 內部 shell out
+        ↓
+        openspec apply        ← Layer 1
+    ↓
+/opsx:archive user-auth       ← Layer 2 內部 shell out
+        ↓
+        openspec archive      ← Layer 1
+    ↓
+/spec handoff                 ← Layer 3（validate + commit）</code></pre>
+
+<blockquote><strong>關鍵</strong>：本 repo 的工作流筆記主要描述 <strong>Layer 3 怎麼包 Layer 2</strong>。Layer 1 + Layer 2 是 OpenSpec 提供的，<strong>不在本 repo 範圍</strong> — 看官方 <a href="https://openspec.dev/">OpenSpec docs</a> 跟 <a href="https://github.com/Fission-AI/OpenSpec">GitHub repo</a>。</blockquote>
+
 <h2>① OpenSpec 原生開發循環</h2>
 <p>OpenSpec 把每一個 feature / 重構 / 變更包成一個 <strong>change proposal</strong>，走 propose → tasks → implement → archive 四段。底層由 <code>openspec</code> CLI + <code>/opsx:*</code> plugin 命令提供。</p>
 
